@@ -296,7 +296,7 @@ public class Term extends Activity implements UpdateCallback {
 	        	unpackDataInPyAct("private", getFilesDir());
 	        	unpackDataInPyAct("public", new File(externalStorage+"/lib"));
 	        }
-        } else if (code.startsWith("lua") || code.startsWith("texteditor")) {
+        } else if (code.startsWith("qlua") || code.startsWith("texteditor")) {
         	unpackDataInPyAct("private4qe", getFilesDir());
 
         }
@@ -541,7 +541,7 @@ public class Term extends Activity implements UpdateCallback {
         String code = NAction.getCode(getApplicationContext());
         String scmd = "";
         
-        if (code.startsWith("lua")) {
+        if (code.startsWith("qlua")) {
 	        scmd = getApplicationContext().getFilesDir()+"/bin/lua";
 	    	if (Build.VERSION.SDK_INT >= 20) { 
 	    		scmd = getApplicationContext().getFilesDir()+"/bin/lua-android5";
