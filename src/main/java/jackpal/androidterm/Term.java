@@ -60,6 +60,7 @@ import com.quseit.common.AssetExtract;
 import com.quseit.common.ResourceManager;
 import com.quseit.util.FileUtils;
 import com.quseit.util.NAction;
+import com.quseit.util.NStorage;
 import com.quseit.util.StringUtils;
 
 import java.io.File;
@@ -563,20 +564,44 @@ public class Term extends Activity implements UpdateCallback {
 	        }
 	        
         } else {
-	        
-	    	if (Build.VERSION.SDK_INT >= 20) { 
-		        scmd = scmd = getApplicationContext().getFilesDir()+"/bin/qpython-android5.sh";;
+	        boolean isRootEnable = NAction.isRootEnable(this);
+	    	if (Build.VERSION.SDK_INT >= 20) {
+                if (isRootEnable) {
+                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython-android5-root.sh";
+                } else {
+                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython-android5.sh";
+                }
 	    	}  else {
-		        scmd = scmd = getApplicationContext().getFilesDir()+"/bin/qpython.sh";;
+                if (isRootEnable) {
+                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython-root.sh";
+                } else {
+                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython.sh";
+
+                }
 
 	    	}
 	    	
 	        if (mArgs==null) {
-	        	if (Build.VERSION.SDK_INT >= 20) { 
-	            	scmd = getApplicationContext().getFilesDir()+"/bin/qpython-android5.sh && exit";
-	
+
+                if (Build.VERSION.SDK_INT >= 20) {
+
+                    if (isRootEnable) {
+                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython-android5-root.sh && exit";
+
+                    } else {
+                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython-android5.sh && exit";
+
+                    }
+
+
 	        	} else {
-	            	scmd = getApplicationContext().getFilesDir()+"/bin/qpython.sh && exit";
+                    if (isRootEnable) {
+                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython-root.sh && exit";
+
+                    } else {
+                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython.sh && exit";
+
+                    }
 	
 	        	}
 	            session = createTermSession(this, settings, scmd, "");
