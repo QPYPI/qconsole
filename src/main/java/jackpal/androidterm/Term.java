@@ -66,6 +66,7 @@ import com.quseit.util.StringUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.text.Collator;
@@ -338,7 +339,7 @@ public class Term extends Activity implements UpdateCallback {
 
         PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TermDebug.LOG_TAG);
-        WifiManager wm = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+        WifiManager wm = (WifiManager)getApplication().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         int wifiLockMode = WifiManager.WIFI_MODE_FULL;
         if (AndroidCompat.SDK >= 12) {
             wifiLockMode = WIFI_MODE_FULL_HIGH_PERF;
@@ -1384,6 +1385,15 @@ public class Term extends Activity implements UpdateCallback {
 
         }
         if (resource.startsWith("private")) {
+            File mf = new File(getFilesDir()+"/lib/python2.7/config/Makefile");
+            if (!mf.exists()) {
+
+                try {
+                    mf.createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 			File bind = new File(getFilesDir()+"/bin");
 			if (bind.listFiles()!=null) {
 				for (File bin : bind.listFiles()) {
