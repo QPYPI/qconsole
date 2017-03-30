@@ -291,12 +291,17 @@ public class Term extends Activity implements UpdateCallback {
 	        File externalStorage = new File(Environment.getExternalStorageDirectory(), "qpython");
 	
 	        if (isQPy3) {
+                unpackDataInPyAct("private1", getFilesDir());
+                unpackDataInPyAct("private2", getFilesDir());
 	        	unpackDataInPyAct("private3", getFilesDir());
 	        	unpackDataInPyAct("public3", new File(externalStorage+"/lib"));
 	
 	        } else {
-	        	unpackDataInPyAct("private", getFilesDir());
-	        	unpackDataInPyAct("public", new File(externalStorage+"/lib"));
+	        	unpackDataInPyAct("private1", getFilesDir());
+                unpackDataInPyAct("private2", getFilesDir());
+                unpackDataInPyAct("private3", getFilesDir());
+
+                unpackDataInPyAct("public", new File(externalStorage+"/lib"));
 	        }
         } else if (code.startsWith("qlua") || code.startsWith("texteditor")) {
         	unpackDataInPyAct("private4qe", getFilesDir());
@@ -1340,18 +1345,6 @@ public class Term extends Activity implements UpdateCallback {
             disk_version = "0";
         }
 
-        // If the disk data is out of date, extract it and write the
-        // version file.
-        /*boolean extract = false;
-        if (disk_version.equals("")) {
-        	extract = true;
-        } else {
-        	Float data_v = Float.parseFloat(data_version);
-        	Float disk_v = Float.parseFloat(disk_version);
-        	if (data_v.intValue()>disk_v.intValue()) {
-        		extract = true;
-        	}
-        }*/
         
         //Log.d(TAG, "data_version:"+Math.round(Double.parseDouble(data_version))+"-disk_version:"+Math.round(Double.parseDouble(disk_version))+"-RET:"+(int)(Double.parseDouble(data_version)-Double.parseDouble(disk_version)));
         if ((int)(Double.parseDouble(data_version)-Double.parseDouble(disk_version))>0 || disk_version.equals("0")) {
