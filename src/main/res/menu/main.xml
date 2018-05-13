@@ -23,16 +23,23 @@
     <!--item android:id="@+id/menu_window_list"
         android:title="@string/window_list"
         android:icon="@drawable/ic_menu_windows" /-->
-    <item android:id="@+id/menu_toggle_soft_keyboard"
-        android:title="@string/toggle_soft_keyboard" />
-    <item android:id="@+id/menu_special_keys"
-        android:title="@string/special_keys" />
+    <!--item android:id="@+id/menu_toggle_soft_keyboard"
+        android:title="@string/toggle_soft_keyboard" /-->
+    <!--item android:id="@+id/menu_special_keys"
+        android:title="@string/special_keys" /-->
+
+
+
     <item android:id="@+id/menu_new_window"
         android:title="@string/new_window"
-        android:icon="@drawable/ic_library_add_white" />        
+         />
+    <item android:id="@+id/menu_send_control_key"
+        android:title="@string/send_control_key"
+        />
+
     <item android:id="@+id/menu_preferences"
         android:title="@string/preferences"
-        android:icon="@drawable/ic_settings_white" />
+         />
     <!--item android:id="@+id/menu_reset"
         android:title="@string/reset" />
     <item android:id="@+id/menu_send_email"
@@ -41,4 +48,14 @@
         android:title="@string/enable_wakelock" />
     <item android:id="@+id/menu_toggle_wifilock"
         android:title="@string/enable_wifilock" />
+
+    <item android:id="@+id/menu_select_text"
+        android:title="@string/select_text" />
+    <item android:id="@+id/menu_copy_all"
+        android:title="@string/copy_all" />
+    <item android:id="@+id/menu_paste"
+        android:title="@string/paste" />
+
+    <!--item android:id="@+id/menu_send_fn_key"
+        android:title="@string/send_fn_key" /-->
 </menu>

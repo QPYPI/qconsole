@@ -276,6 +276,7 @@ public class Term extends Activity implements UpdateCallback {
     //private String[] mArgs = null;
 
 
+    @SuppressLint("WrongConstant")
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -287,22 +288,13 @@ public class Term extends Activity implements UpdateCallback {
         
         String code = NAction.getCode(this);
         if (code.startsWith("qpy")) {
-	        boolean isQPy3 =  NAction.isQPy3(getApplicationContext());
 	        File externalStorage = new File(Environment.getExternalStorageDirectory(), "qpython");
-	
-	        if (isQPy3) {
-                unpackDataInPyAct("private1", getFilesDir());
-                unpackDataInPyAct("private2", getFilesDir());
-	        	unpackDataInPyAct("private3", getFilesDir());
-	        	unpackDataInPyAct("public3", new File(externalStorage+"/lib"));
-	
-	        } else {
-	        	unpackDataInPyAct("private1", getFilesDir());
-                unpackDataInPyAct("private2", getFilesDir());
-                unpackDataInPyAct("private3", getFilesDir());
 
-                unpackDataInPyAct("public", new File(externalStorage+"/lib"));
-	        }
+            unpackDataInPyAct("private1", getFilesDir());
+            unpackDataInPyAct("private2", getFilesDir());
+            unpackDataInPyAct("private3", getFilesDir());
+            unpackDataInPyAct("public3", new File(externalStorage+"/lib"));
+
         } else if (code.startsWith("qlua") || code.startsWith("texteditor")) {
         	unpackDataInPyAct("private4qe", getFilesDir());
 
@@ -332,6 +324,7 @@ public class Term extends Activity implements UpdateCallback {
             switch (actionBarMode) {
             case TermSettings.ACTION_BAR_MODE_ALWAYS_VISIBLE:
                 setTheme(R.style.Theme_Holo);
+                getActionBar().setBackgroundDrawable(this.getBaseContext().getResources().getDrawable(R.drawable.action_bar_background));
                 break;
             case TermSettings.ACTION_BAR_MODE_HIDES:
                 setTheme(R.style.Theme_Holo_ActionBarOverlay);
@@ -573,15 +566,19 @@ public class Term extends Activity implements UpdateCallback {
 	        boolean isRootEnable = NAction.isRootEnable(this);
 	    	if (Build.VERSION.SDK_INT >= 20) {
                 if (isRootEnable) {
-                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython-android5-root.sh";
+                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython"+
+                            (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+"-android5-root.sh";
                 } else {
-                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython-android5.sh";
+                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython"+
+                            (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+"-android5.sh";
                 }
 	    	}  else {
                 if (isRootEnable) {
-                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython-root.sh";
+                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython"+
+                            (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+"-root.sh";
                 } else {
-                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython.sh";
+                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython"+
+                            (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+".sh";
 
                 }
 
@@ -592,20 +589,24 @@ public class Term extends Activity implements UpdateCallback {
                 if (Build.VERSION.SDK_INT >= 20) {
 
                     if (isRootEnable) {
-                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython-android5-root.sh && exit";
+                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython"+
+                                (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+"-android5-root.sh && exit";
 
                     } else {
-                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython-android5.sh && exit";
+                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython"+
+                                (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+"-android5.sh && exit";
 
                     }
 
 
 	        	} else {
                     if (isRootEnable) {
-                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython-root.sh && exit";
+                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython"+
+                                (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+"-root.sh && exit";
 
                     } else {
-                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython.sh && exit";
+                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython"+
+                                (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+".sh && exit";
 
                     }
 	
@@ -796,10 +797,11 @@ public class Term extends Activity implements UpdateCallback {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
-        MenuItemCompat.setShowAsAction(menu.findItem(R.id.menu_special_keys), MenuItemCompat.SHOW_AS_ACTION_ALWAYS);
+        //MenuItemCompat.setShowAsAction(menu.findItem(R.id.menu_special_keys), MenuItemCompat.SHOW_AS_ACTION_ALWAYS);
         MenuItemCompat.setShowAsAction(menu.findItem(R.id.menu_new_window), MenuItemCompat.SHOW_AS_ACTION_IF_ROOM);
         //MenuItemCompat.setShowAsAction(menu.findItem(R.id.menu_close_window), MenuItemCompat.SHOW_AS_ACTION_IF_ROOM);
-        MenuItemCompat.setShowAsAction(menu.findItem(R.id.menu_preferences), MenuItemCompat.SHOW_AS_ACTION_IF_ROOM);
+        MenuItemCompat.setShowAsAction(menu.findItem(R.id.menu_send_control_key), MenuItemCompat.SHOW_AS_ACTION_IF_ROOM);
+        MenuItemCompat.setShowAsAction(menu.findItem(R.id.menu_toggle_wakelock), MenuItemCompat.SHOW_AS_ACTION_IF_ROOM);
 
         return true;
     }
@@ -822,16 +824,49 @@ public class Term extends Activity implements UpdateCallback {
             toast.show();
         } else if (id == R.id.menu_send_email) {
             doEmailTranscript();*/
-        } else if (id == R.id.menu_special_keys) {
-            doDocumentKeys();
-        } else if (id == R.id.menu_toggle_soft_keyboard) {
-            doToggleSoftKeyboard();
+
+        /*
+                  case SELECT_TEXT_ID:
+            getCurrentEmulatorView().toggleSelectingText();
+            return true;
+          case COPY_ALL_ID:
+            doCopyAll();
+            return true;
+          case PASTE_ID:
+            doPaste();
+            return true;
+          case SEND_CONTROL_KEY_ID:
+            doSendControlKey();
+            return true;
+          case SEND_FN_KEY_ID:
+            doSendFnKey();
+         */
+        //} else if (id == R.id.menu_special_keys) {
+          //  doDocumentKeys();
+        //} else if (id == R.id.menu_toggle_soft_keyboard) {
+          //  doToggleSoftKeyboard();
         } else if (id == R.id.menu_toggle_wakelock) {
             doToggleWakeLock();
         } else if (id == R.id.menu_toggle_wifilock) {
             doToggleWifiLock();
         } else if (id == ActionBarCompat.ID_HOME) {
-        	closeWindow();
+            closeWindow();
+        } else if (id == R.id.menu_select_text) {
+            getCurrentEmulatorView().toggleSelectingText();
+
+        } else if (id == R.id.menu_copy_all) {
+            doCopyAll();
+
+        } else if (id == R.id.menu_paste) {
+            doPaste();
+
+        } else if (id == R.id.menu_send_control_key) {
+            doSendControlKey();
+
+        //} else if (id == R.id.menu_send_fn_key) {
+          //  doSendFnKey();
+
+
         } else {
         	//Log.d(TAG, "onOptionsItemSelected:");
         }
@@ -859,22 +894,43 @@ public class Term extends Activity implements UpdateCallback {
     }
 
     private void confirmCloseWindow() {
-        final AlertDialog.Builder b = new AlertDialog.Builder(this);
-        b.setIcon(android.R.drawable.ic_dialog_alert);
-        b.setMessage(R.string.confirm_window_close_message);
-        final Runnable closeWindow = new Runnable() {
-            public void run() {
-                doCloseWindow();
-            }
-        };
-        b.setPositiveButton(android.R.string.no, new DialogInterface.OnClickListener() {
-           public void onClick(DialogInterface dialog, int id) {
-               dialog.dismiss();
-               mHandler.post(closeWindow);
-           }
-        });
-        b.setNegativeButton(android.R.string.yes, null);
-        b.show();
+        if (AndroidCompat.SDK >= 11) {
+            final AlertDialog.Builder b = new AlertDialog.Builder(this, AlertDialog.THEME_TRADITIONAL);
+            b.setIcon(android.R.drawable.ic_dialog_alert);
+            b.setMessage(R.string.confirm_window_close_message);
+            final Runnable closeWindow = new Runnable() {
+                public void run() {
+                    doCloseWindow();
+                }
+            };
+            b.setPositiveButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.dismiss();
+                    mHandler.post(closeWindow);
+                }
+            });
+            b.setNegativeButton(android.R.string.yes, null);
+
+            b.show();
+        } else {
+            final AlertDialog.Builder b = new AlertDialog.Builder(this);
+            b.setIcon(android.R.drawable.ic_dialog_alert);
+            b.setMessage(R.string.confirm_window_close_message);
+            final Runnable closeWindow = new Runnable() {
+                public void run() {
+                    doCloseWindow();
+                }
+            };
+            b.setPositiveButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.dismiss();
+                    mHandler.post(closeWindow);
+                }
+            });
+            b.setNegativeButton(android.R.string.yes, null);
+
+            b.show();
+        }
     }
 
     private void doCloseWindow() {
@@ -973,6 +1029,7 @@ public class Term extends Activity implements UpdateCallback {
         return super.onPrepareOptionsMenu(menu);
     }
 
+    /*
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v,
             ContextMenuInfo menuInfo) {
@@ -986,7 +1043,7 @@ public class Term extends Activity implements UpdateCallback {
       if (!canPaste()) {
           menu.getItem(PASTE_ID).setEnabled(false);
       }
-    }
+    }*/
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
@@ -1012,29 +1069,56 @@ public class Term extends Activity implements UpdateCallback {
         }
 
     public void closeWindow() {
-		AlertDialog.Builder alert = new AlertDialog.Builder(this);
-        alert.setTitle(R.string.close_window).setMessage(R.string.confirm_window_close_message)
-        	.setPositiveButton(R.string.promote_no, new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-		    		if (AndroidCompat.SDK < 5) {
-		                mBackKeyPressed = true;
+        if (AndroidCompat.SDK >= 11) {
 
-		    		} else {
-    	                mStopServiceOnFinish = true;
+            AlertDialog.Builder alert = new AlertDialog.Builder(this, AlertDialog.THEME_TRADITIONAL);
+            alert.setTitle(R.string.close_window).setMessage(R.string.confirm_window_close_message)
+                    .setPositiveButton(R.string.promote_no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (AndroidCompat.SDK < 5) {
+                                mBackKeyPressed = true;
 
-    					finish();
-		    		}
-					
-				}
-			}).setNegativeButton(R.string.promote_ok, new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
+                            } else {
+                                mStopServiceOnFinish = true;
 
-					finish();
-				}
-			});
+                                finish();
+                            }
+
+                        }
+                    }).setNegativeButton(R.string.promote_ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    finish();
+                }
+            });
             alert.create().show();
+        } else {
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            alert.setTitle(R.string.close_window).setMessage(R.string.confirm_window_close_message)
+                    .setPositiveButton(R.string.promote_no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (AndroidCompat.SDK < 5) {
+                                mBackKeyPressed = true;
+
+                            } else {
+                                mStopServiceOnFinish = true;
+
+                                finish();
+                            }
+
+                        }
+                    }).setNegativeButton(R.string.promote_ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    finish();
+                }
+            });
+            alert.create().show();
+        }
 
     }
     @Override
@@ -1059,31 +1143,61 @@ public class Term extends Activity implements UpdateCallback {
 
             }
     	} else {*/
-    		AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+        if (AndroidCompat.SDK >= 11) {
+
+            AlertDialog.Builder alert = new AlertDialog.Builder(this, AlertDialog.THEME_TRADITIONAL);
             alert.setTitle(R.string.close_window).setMessage(R.string.confirm_window_close_message)
-            	.setPositiveButton(R.string.promote_no, new DialogInterface.OnClickListener() {
-    				@Override
-    				public void onClick(DialogInterface dialog, int which) {
-    		    		if (AndroidCompat.SDK < 5 && keyCode == KeyEvent.KEYCODE_BACK) {
-    		                mBackKeyPressed = true;
+                    .setPositiveButton(R.string.promote_no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (AndroidCompat.SDK < 5 && keyCode == KeyEvent.KEYCODE_BACK) {
+                                mBackKeyPressed = true;
 
-    		    		} else {
-	    	                mStopServiceOnFinish = true;
-	
-	    					finish();
-    		    		}
-    					
-    				}
-    			}).setNegativeButton(R.string.promote_ok, new DialogInterface.OnClickListener() {
-    				@Override
-    				public void onClick(DialogInterface dialog, int which) {
+                            } else {
+                                mStopServiceOnFinish = true;
 
-    					finish();
-    				}
-    			});
-                alert.create().show();
-                
+                                finish();
+                            }
+
+                        }
+                    }).setNegativeButton(R.string.promote_ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    finish();
+                }
+            });
+            alert.create().show();
+
             return super.onKeyDown(keyCode, event);
+        } else {
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            alert.setTitle(R.string.close_window).setMessage(R.string.confirm_window_close_message)
+                    .setPositiveButton(R.string.promote_no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (AndroidCompat.SDK < 5 && keyCode == KeyEvent.KEYCODE_BACK) {
+                                mBackKeyPressed = true;
+
+                            } else {
+                                mStopServiceOnFinish = true;
+
+                                finish();
+                            }
+
+                        }
+                    }).setNegativeButton(R.string.promote_ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    finish();
+                }
+            });
+            alert.create().show();
+
+            return super.onKeyDown(keyCode, event);
+        }
 
     	//}
     }
@@ -1208,13 +1322,15 @@ public class Term extends Activity implements UpdateCallback {
          getSystemService(Context.CLIPBOARD_SERVICE);
         CharSequence paste = clip.getText();
         byte[] utf8;
-        try {
-            utf8 = paste.toString().getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            Log.e(TermDebug.LOG_TAG, "UTF-8 encoding not found.");
-            return;
+        if (paste!=null) {
+            try {
+                utf8 = paste.toString().getBytes("UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                Log.e(TermDebug.LOG_TAG, "UTF-8 encoding not found.");
+                return;
+            }
+            getCurrentTermSession().write(paste.toString());
         }
-        getCurrentTermSession().write(paste.toString());
     }
 
     private void doSendControlKey() {
@@ -1226,20 +1342,38 @@ public class Term extends Activity implements UpdateCallback {
     }
 
     private void doDocumentKeys() {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-        Resources r = getResources();
-        dialog.setTitle(r.getString(R.string.control_key_dialog_title));
-        dialog.setMessage(
-            formatMessage(mSettings.getControlKeyId(), TermSettings.CONTROL_KEY_ID_NONE,
-                r, R.array.control_keys_short_names,
-                R.string.control_key_dialog_control_text,
-                R.string.control_key_dialog_control_disabled_text, "CTRLKEY")
-            + "\n\n" +
-            formatMessage(mSettings.getFnKeyId(), TermSettings.FN_KEY_ID_NONE,
-                r, R.array.fn_keys_short_names,
-                R.string.control_key_dialog_fn_text,
-                R.string.control_key_dialog_fn_disabled_text, "FNKEY"));
-         dialog.show();
+        if (AndroidCompat.SDK >= 11) {
+
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this, AlertDialog.THEME_TRADITIONAL);
+            Resources r = getResources();
+            dialog.setTitle(r.getString(R.string.control_key_dialog_title));
+            dialog.setMessage(
+                    formatMessage(mSettings.getControlKeyId(), TermSettings.CONTROL_KEY_ID_NONE,
+                            r, R.array.control_keys_short_names,
+                            R.string.control_key_dialog_control_text,
+                            R.string.control_key_dialog_control_disabled_text, "CTRLKEY")
+                            + "\n\n" +
+                            formatMessage(mSettings.getFnKeyId(), TermSettings.FN_KEY_ID_NONE,
+                                    r, R.array.fn_keys_short_names,
+                                    R.string.control_key_dialog_fn_text,
+                                    R.string.control_key_dialog_fn_disabled_text, "FNKEY"));
+            dialog.show();
+        } else {
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+            Resources r = getResources();
+            dialog.setTitle(r.getString(R.string.control_key_dialog_title));
+            dialog.setMessage(
+                    formatMessage(mSettings.getControlKeyId(), TermSettings.CONTROL_KEY_ID_NONE,
+                            r, R.array.control_keys_short_names,
+                            R.string.control_key_dialog_control_text,
+                            R.string.control_key_dialog_control_disabled_text, "CTRLKEY")
+                            + "\n\n" +
+                            formatMessage(mSettings.getFnKeyId(), TermSettings.FN_KEY_ID_NONE,
+                                    r, R.array.fn_keys_short_names,
+                                    R.string.control_key_dialog_fn_text,
+                                    R.string.control_key_dialog_fn_disabled_text, "FNKEY"));
+            dialog.show();
+        }
      }
 
      private String formatMessage(int keyId, int disabledKeyId,
@@ -1378,15 +1512,15 @@ public class Term extends Activity implements UpdateCallback {
 
         }
         if (resource.startsWith("private")) {
-            File mf = new File(getFilesDir()+"/lib/python2.7/config/Makefile");
-            if (!mf.exists()) {
-
-                try {
-                    mf.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+//            File mf = new File(getFilesDir()+"/lib/python2.7/config/Makefile");
+//            if (!mf.exists()) {
+//
+//                try {
+//                    mf.createNewFile();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
 			File bind = new File(getFilesDir()+"/bin");
 			if (bind.listFiles()!=null) {
 				for (File bin : bind.listFiles()) {

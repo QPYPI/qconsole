@@ -1,20 +1,16 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '25.0.0'
+    compileSdkVersion 26
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         minSdkVersion 9
         targetSdkVersion 21
 
         ndk {
-            moduleName "libjackpal-androidterm4"
-            ldLibs "log"
             abiFilter "armeabi"
-
         }
-
     }
 
     buildTypes {
@@ -23,9 +19,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+    externalNativeBuild {
+        ndkBuild {
+            path '../qconsole/src/main/jni/Android.mk'
+        }
+
+    }
 }
 
 dependencies {
     compile project(':qbaselib')
-    compile project(':mconsolemulatorviewlib')
+    compile project(':qconsolemulatorviewlib')
 }

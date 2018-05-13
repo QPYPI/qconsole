@@ -117,84 +117,19 @@ public class ShellTermSession extends TermSession {
         sendInitialCommand(mInitialCommand);*/
 
     }
-    
-    public void loadLibrary(File libPath) {
-        try {
-            System.loadLibrary("sdl");
-            System.loadLibrary("sdl_image");
-            System.loadLibrary("sdl_ttf");
-            System.loadLibrary("sdl_mixer");
-            System.loadLibrary("python2.7");
-            System.loadLibrary("application");
-            System.loadLibrary("sdl_main");
 
-            try {
-                System.loadLibrary("pymodules");
-            } catch (UnsatisfiedLinkError e) {
-                Log.e("PythonActivity", "Exception occured when loading pymodules ocre:" + e.getLocalizedMessage());
-            }
-
-            try {
-                System.loadLibrary("sqlite3");
-                System.load(libPath + "/lib/python2.7/lib-dynload/_sqlite3.so");
-            } catch (UnsatisfiedLinkError e) {
-                Log.e("PythonActivity", "Exception occured when loading libsqlite3 ocre:" + e.getLocalizedMessage());
-            }
-
-//            try {
-//
-//                System.load(libPath+"/libpymodules.so");
-//            } catch (UnsatisfiedLinkError e) {
-//                Log.e("PythonActivity", "Exception occured when loading libpymodules ocre:" + e.getLocalizedMessage());
-//            }
-            try {
-                System.load(libPath + "/lib/python2.7/lib-dynload/_io.so");
-                System.load(libPath + "/lib/python2.7/lib-dynload/unicodedata.so");
-            } catch(UnsatisfiedLinkError e) {
-                Log.d(TermDebug.LOG_TAG, ""+e.getMessage());
-            }
-        } catch(UnsatisfiedLinkError e1) {
-            Toast.makeText(context, "Failed to load Python library", Toast.LENGTH_SHORT).show();
-
-//            System.load(libPath+"/libsdl.so");
-//            System.load(libPath+"/libsdl_image.so");
-//            System.load(libPath+"/libsdl_ttf.so");
-//            System.load(libPath+"/libsdl_mixer.so");
-//            System.load(libPath+"/libpython2.7.so");
-//            System.load(libPath+"/libapplication.so");
-//            System.load(libPath+"/libsdl_main.so");
-//            System.load(libPath+"/libsqlite3.so");
-//            System.load(libPath + "/lib/python2.7/lib-dynload/_sqlite3.so");
-        }
-
-
-        /*try {
-            System.load(libPath + "/lib/python2.7/lib-dynload/_imaging.so");
-            System.load(libPath + "/lib/python2.7/lib-dynload/_imagingft.so");
-            System.load(libPath + "/lib/python2.7/lib-dynload/_imagingmath.so");
-        } catch(UnsatisfiedLinkError e) {
-        }*/
-    }
-
-    
     public void updatePrefs(TermSettings settings) {
         mSettings = settings;
-        setColorScheme(new ColorScheme(settings.getColorScheme()));
-        setDefaultUTF8Mode(settings.defaultToUTF8Mode());
+        try {
+            setColorScheme(new ColorScheme(settings.getColorScheme()));
+            setDefaultUTF8Mode(settings.defaultToUTF8Mode());
+
+        } catch (Exception e) {
+
+        }
     }
     
     private void initializeSession(String cmd) {
-    	//String code = getCode(context);
-        boolean isQPy3 =  NAction.isQPy3(context);
-        /*if (cmd!=null) {
-        	if (cmd.startsWith("python ")) {
-        		isQPy3 = false;
-        	} else if (cmd.startsWith("python ")) {
-        		isQPy3 = true;
-        	}
-        }*/
-        
-        //Log.d("ShellTermSession", "initializeSession:"+cmd+"-"+isQPy3);
         TermSettings settings = mSettings;
 
         int[] processId = new int[1];
@@ -216,7 +151,7 @@ public class ShellTermSession extends TermSession {
         if (settings.verifyPath()) {
             path = checkPath(path);
         }
-        String[] env = new String[20];
+        String[] env = new String[21];
         File filesDir = this.context.getFilesDir();
 
         env[0] = "TERM=" + settings.getTermType();
@@ -233,31 +168,21 @@ public class ShellTermSession extends TermSession {
         	externalStorage.mkdir();
         }
 
-        if (isQPy3) {
-	        env[5] = "PYTHONPATH="
-    				+filesDir+"/lib/python3.2/lib/:"
-    				+filesDir+"/lib/python3.2/site-packages/:"
-    				+filesDir+"/lib/python3.2/python32.zip:"
-    				+filesDir+"/lib/python3.2/lib-dynload/:"
-                    +externalStorage+"/lib/python3.2/site-packages/:"
-                    +pyPath;
-	        
-	        env[14] = "IS_QPY3=1";
-	        
-	        
-        } else {
-
-	        env[5] = "PYTHONPATH="
-	        		+filesDir+"/lib/python2.7/site-packages/:"
-	        		+filesDir+"/lib/python2.7/:"
-	        		+filesDir+"/lib/python27.zip:"
-	        		+filesDir+"/lib/python2.7/lib-dynload/:"
-                    +externalStorage+"/lib/python2.7/site-packages/:"
-                    +pyPath;
-	        
-	        //env[14] = "IS_QPY2=1";
-	        env[14] = "PYTHONSTARTUP="+filesDir+"/lib/python2.7/site-packages/qpy.py";
+        String py3 = NAction.getQPyInterpreter(this.context);
+        if (py3.equals("2.x")) {
+            py3 = "python3.2";
         }
+        Log.d("HERE", py3);
+        env[5] = "PYTHONPATH="
+                +filesDir+"/lib/"+py3+"/site-packages/:"
+                +filesDir+"/lib/"+py3+"/:"
+                +filesDir+"/lib/"+py3+".zip:"
+                +filesDir+"/lib/"+py3+"/lib-dynload/:"
+                +externalStorage+"/lib/"+py3+"/site-packages/:"
+                +pyPath;
+
+        env[14] = "IS_QPY3=1";
+
         
         env[6] = "PYTHONOPTIMIZE=2";
         env[7] = "TMPDIR="+externalStorage+"/cache";
@@ -279,6 +204,7 @@ public class ShellTermSession extends TermSession {
         env[17] = "PYTHONDONTWRITEBYTECODE=1";
         env[18] = "TMP="+externalStorage+"/cache";
         env[19] = "ANDROID_APP_PATH="+externalStorage+"";
+        env[20] = "LANG=en_US.UTF-8";
 
         File enf = new File(context.getFilesDir()+"/bin/init.sh");
         //if (! enf.exists()) {

@@ -2,7 +2,7 @@
 <resources>
 <string name="application_terminal">QPython 控制台</string>
 <string name="preferences">首選項</string>
-<string name="new_window">新建窗口</string>
+<string name="new_window">新建</string>
 <string name="close_window">在後台運行</string>
 <string name="window_list">窗口</string>
 <string name="prev_window">上一個窗口</string>
@@ -20,7 +20,7 @@
 <string name="select_text">選擇文本</string>
 <string name="copy_all">複製所有</string>
 <string name="paste">粘貼</string>
-<string name="send_control_key">發送控制鍵</string>
+<string name="send_control_key">Ctrl</string>
 <string name="send_fn_key">發送fn鍵</string>
 <string name="window_title">編號 %1$d</string>
 <string name="service_notify_text">QPython 控制台運行中</string>
