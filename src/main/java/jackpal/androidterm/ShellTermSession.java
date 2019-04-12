@@ -169,14 +169,13 @@ public class ShellTermSession extends TermSession {
         }
 
         String py3 = NAction.getQPyInterpreter(this.context);
-        if (py3.equals("2.x")) {
-            py3 = "python3.2";
-        }
+
         Log.d("HERE", py3);
         env[5] = "PYTHONPATH="
                 +filesDir+"/lib/"+py3+"/site-packages/:"
                 +filesDir+"/lib/"+py3+"/:"
-                +filesDir+"/lib/"+py3+".zip:"
+                +filesDir+"/lib/"+py3.replace(".","")+".zip:"
+                +filesDir+"/lib/"+py3+"/qpyutil.zip:"
                 +filesDir+"/lib/"+py3+"/lib-dynload/:"
                 +externalStorage+"/lib/"+py3+"/site-packages/:"
                 +pyPath;

@@ -419,7 +419,7 @@ public class Term extends Activity implements UpdateCallback {
             } else {
             	mArgs = this.getIntent().getStringArrayExtra("ARGS");
             	if (mArgs!=null) {
-	                mTermSessions.add(createTermSession(mArgs));
+	                mTermSessions.add(createPyTermSession(mArgs));
 
             	} else {
             	
@@ -513,7 +513,7 @@ public class Term extends Activity implements UpdateCallback {
     }
 
     protected static TermSession createTermSession(Context context, TermSettings settings, String initialCommand, String path) {
-    	//Log.d("Term", "createTermSession:"+initialCommand);
+    	Log.d("Term", "createTermSession:"+initialCommand);
         ShellTermSession session = new ShellTermSession(context, settings, initialCommand, path);
         // XXX We should really be able to fetch this from within TermSession
         session.setProcessExitMessage(context.getString(R.string.process_exit_message));
@@ -536,6 +536,7 @@ public class Term extends Activity implements UpdateCallback {
     
     @SuppressLint("NewApi")
 	private TermSession createPyTermSession(String[] mArgs) {
+        Log.d(TAG, "createPyTermSession");
         TermSettings settings = mSettings;
         TermSession session;
         String code = NAction.getCode(getApplicationContext());
@@ -545,8 +546,7 @@ public class Term extends Activity implements UpdateCallback {
 	        scmd = getApplicationContext().getFilesDir()+"/bin/lua";
 	    	if (Build.VERSION.SDK_INT >= 20) { 
 	    		scmd = getApplicationContext().getFilesDir()+"/bin/lua-android5";
-	
-	    	} 
+	    	}
 	        if (mArgs==null) {
 	        	if (Build.VERSION.SDK_INT >= 20) { 
 	            	settings.mShell = getApplicationContext().getFilesDir()+"/bin/lua-android5";
@@ -566,19 +566,15 @@ public class Term extends Activity implements UpdateCallback {
 	        boolean isRootEnable = NAction.isRootEnable(this);
 	    	if (Build.VERSION.SDK_INT >= 20) {
                 if (isRootEnable) {
-                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython"+
-                            (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+"-android5-root.sh";
+                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-android5-root.sh";
                 } else {
-                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython"+
-                            (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+"-android5.sh";
+                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-android5.sh";
                 }
 	    	}  else {
                 if (isRootEnable) {
-                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython"+
-                            (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+"-root.sh";
+                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-root.sh";
                 } else {
-                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython"+
-                            (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+".sh";
+                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython3.sh";
 
                 }
 
@@ -589,24 +585,20 @@ public class Term extends Activity implements UpdateCallback {
                 if (Build.VERSION.SDK_INT >= 20) {
 
                     if (isRootEnable) {
-                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython"+
-                                (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+"-android5-root.sh && exit";
+                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython3-android5-root.sh && exit";
 
                     } else {
-                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython"+
-                                (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+"-android5.sh && exit";
+                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython3-android5.sh && exit";
 
                     }
 
 
 	        	} else {
                     if (isRootEnable) {
-                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython"+
-                                (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+"-root.sh && exit";
+                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython3-root.sh && exit";
 
                     } else {
-                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython"+
-                                (NAction.getQPyInterpreter(this).equals("2.x")?"":"3")+".sh && exit";
+                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython3.sh && exit";
 
                     }
 	
@@ -617,17 +609,17 @@ public class Term extends Activity implements UpdateCallback {
 	        	
 	        	//String content = FileHelper.getFileContents(mArgs[0]);
 	        	//String cmd = settings.getInitialCommand().equals("")?scmd:settings.getInitialCommand();
-	        	if (mArgs.length<3) {
-	        		session = createTermSession(this, settings, scmd+" \""+StringUtils.addSlashes(mArgs[0])+"\" && exit", mArgs[1]);
-	        		mArgs = null;	
-	        	} else {
+//	        	if (mArgs.length<3) {
+//	        		session = createTermSession(this, settings, scmd+" \""+StringUtils.addSlashes(mArgs[0])+"\" && exit", mArgs[1]);
+//	        		mArgs = null;
+//	        	} else {
 	        		String cm = "";
 	        		for (int i=0;i<mArgs.length-1;i++) {
-	        			cm += " "+mArgs[i]+" ";
+	        			cm += " "+StringUtils.addSlashes(mArgs[i])+" ";
 	        		}
 	        		session = createTermSession(this, settings, scmd+" "+cm+" && exit", mArgs[1]);
 	        		mArgs = null;
-	        	}
+	        	//}
 	        }
         }
         session.setFinishCallback(mTermService);
@@ -1287,7 +1279,7 @@ public class Term extends Activity implements UpdateCallback {
             // Don't really want to supply an address, but
             // currently it's required, otherwise nobody
             // wants to handle the intent.
-            String addr = "user@example.com";
+            String addr = "support@qpython.org";
             Intent intent =
                     new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"
                             + addr));
@@ -1358,6 +1350,7 @@ public class Term extends Activity implements UpdateCallback {
                                     R.string.control_key_dialog_fn_text,
                                     R.string.control_key_dialog_fn_disabled_text, "FNKEY"));
             dialog.show();
+
         } else {
             AlertDialog.Builder dialog = new AlertDialog.Builder(this);
             Resources r = getResources();
