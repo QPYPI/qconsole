@@ -6,10 +6,10 @@ android {
 
     defaultConfig {
         minSdkVersion 9
-        targetSdkVersion 21
+        targetSdkVersion 26
 
         ndk {
-            abiFilter "armeabi"
+            abiFilter "armeabi-v7a"
         }
     }
 
@@ -28,6 +28,6 @@ android {
 }
 
 dependencies {
-    compile project(':qbaselib')
-    compile project(':qconsolemulatorviewlib')
+    api project(':qbaselib')
+    api project(':qconsolemulatorviewlib')
 }
