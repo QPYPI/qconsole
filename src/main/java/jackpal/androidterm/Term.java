@@ -276,7 +276,7 @@ public class Term extends Activity implements UpdateCallback {
     //private String[] mArgs = null;
 
 
-    @SuppressLint("WrongConstant")
+    @SuppressLint({"WrongConstant", "InvalidWakeLockTag"})
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
