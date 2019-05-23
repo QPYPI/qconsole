@@ -84,8 +84,6 @@ import jackpal.androidterm.emulatorview.UpdateCallback;
 import jackpal.androidterm.util.SessionList;
 import jackpal.androidterm.util.TermSettings;
 
-//import com.hipipal.sl4alib.PyScriptService2;
-
 /**
  * A terminal emulator activity.
  */
@@ -324,7 +322,11 @@ public class Term extends Activity implements UpdateCallback {
             switch (actionBarMode) {
             case TermSettings.ACTION_BAR_MODE_ALWAYS_VISIBLE:
                 setTheme(R.style.Theme_Holo);
-                getActionBar().setBackgroundDrawable(this.getBaseContext().getResources().getDrawable(R.drawable.action_bar_background));
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+
+                    getActionBar().setBackgroundDrawable(this.getBaseContext().getResources().getDrawable(R.drawable.action_bar_background));
+                }
                 break;
             case TermSettings.ACTION_BAR_MODE_HIDES:
                 setTheme(R.style.Theme_Holo_ActionBarOverlay);
@@ -886,7 +888,7 @@ public class Term extends Activity implements UpdateCallback {
     }
 
     private void confirmCloseWindow() {
-        if (AndroidCompat.SDK >= 11) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             final AlertDialog.Builder b = new AlertDialog.Builder(this, AlertDialog.THEME_TRADITIONAL);
             b.setIcon(android.R.drawable.ic_dialog_alert);
             b.setMessage(R.string.confirm_window_close_message);
@@ -1061,7 +1063,7 @@ public class Term extends Activity implements UpdateCallback {
         }
 
     public void closeWindow() {
-        if (AndroidCompat.SDK >= 11) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 
             AlertDialog.Builder alert = new AlertDialog.Builder(this, AlertDialog.THEME_TRADITIONAL);
             alert.setTitle(R.string.close_window).setMessage(R.string.confirm_window_close_message)
@@ -1136,7 +1138,7 @@ public class Term extends Activity implements UpdateCallback {
             }
     	} else {*/
 
-        if (AndroidCompat.SDK >= 11) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 
             AlertDialog.Builder alert = new AlertDialog.Builder(this, AlertDialog.THEME_TRADITIONAL);
             alert.setTitle(R.string.close_window).setMessage(R.string.confirm_window_close_message)
@@ -1334,7 +1336,7 @@ public class Term extends Activity implements UpdateCallback {
     }
 
     private void doDocumentKeys() {
-        if (AndroidCompat.SDK >= 11) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 
             AlertDialog.Builder dialog = new AlertDialog.Builder(this, AlertDialog.THEME_TRADITIONAL);
             Resources r = getResources();
