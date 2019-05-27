@@ -17,6 +17,7 @@
 package jackpal.androidterm;
 
 import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
@@ -55,6 +56,7 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.quseit.common.AssetExtract;
 import com.quseit.common.ResourceManager;
@@ -90,10 +92,10 @@ import jackpal.androidterm.util.TermSettings;
 
 public class Term extends Activity implements UpdateCallback {
     private ResourceManager resourceManager;
-    
+
     private String TAG = "Term";
 
-	/**
+    /**
      * The ViewFlipper which holds the collection of EmulatorView widgets.
      */
     private TermViewFlipper mViewFlipper;
@@ -176,6 +178,7 @@ public class Term extends Activity implements UpdateCallback {
     private int mActionBarMode = TermSettings.ACTION_BAR_MODE_NONE;
 
     private WindowListAdapter mWinListAdapter;
+
     private class WindowListActionBarAdapter extends WindowListAdapter implements UpdateCallback {
         // From android.R.style in API 13
         private static final int TextAppearance_Holo_Widget_ActionBar_Title = 0x01030112;
@@ -270,7 +273,7 @@ public class Term extends Activity implements UpdateCallback {
     };
 
     private Handler mHandler = new Handler();
-    
+
     //private String[] mArgs = null;
 
 
@@ -283,20 +286,11 @@ public class Term extends Activity implements UpdateCallback {
         mSettings = new TermSettings(getResources(), mPrefs);
 
         resourceManager = new ResourceManager(this);
-        
-        String code = NAction.getCode(this);
-        if (code.startsWith("qpy")) {
-	        File externalStorage = new File(Environment.getExternalStorageDirectory(), "qpython");
 
-            unpackDataInPyAct("private1", getFilesDir());
-            unpackDataInPyAct("private2", getFilesDir());
-            unpackDataInPyAct("private3", getFilesDir());
-            unpackDataInPyAct("public3", new File(externalStorage+"/lib"));
-
-        } else if (code.startsWith("qlua") || code.startsWith("texteditor")) {
-        	unpackDataInPyAct("private4qe", getFilesDir());
-
-        }
+        // for qlua and texteditor
+//        if (code.startsWith("qlua") || code.startsWith("texteditor")) {
+//        	unpackDataInPyAct("private4qe", getFilesDir());
+//        }
         Intent broadcast = new Intent(ACTION_PATH_BROADCAST);
         if (AndroidCompat.SDK >= 12) {
             broadcast.addFlags(FLAG_INCLUDE_STOPPED_PACKAGES);
@@ -316,30 +310,31 @@ public class Term extends Activity implements UpdateCallback {
             Log.w(TermDebug.LOG_TAG, "bind to service failed!");
         }
 
-        if (AndroidCompat.SDK >= 11) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             int actionBarMode = mSettings.actionBarMode();
             mActionBarMode = actionBarMode;
             switch (actionBarMode) {
-            case TermSettings.ACTION_BAR_MODE_ALWAYS_VISIBLE:
-                setTheme(R.style.Theme_Holo);
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-
+                case TermSettings.ACTION_BAR_MODE_ALWAYS_VISIBLE:
+                    setTheme(R.style.Theme_Holo);
                     getActionBar().setBackgroundDrawable(this.getBaseContext().getResources().getDrawable(R.drawable.action_bar_background));
-                }
-                break;
-            case TermSettings.ACTION_BAR_MODE_HIDES:
-                setTheme(R.style.Theme_Holo_ActionBarOverlay);
-                break;
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+//                        getActionBar().setIcon(R.drawable.ic_back);
+//                    }
+
+                    break;
+                case TermSettings.ACTION_BAR_MODE_HIDES:
+                    setTheme(R.style.Theme_Holo_ActionBarOverlay);
+                    break;
             }
         }
 
         setContentView(R.layout.term_activity);
+
         mViewFlipper = (TermViewFlipper) findViewById(VIEW_FLIPPER);
 
-        PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TermDebug.LOG_TAG);
-        WifiManager wm = (WifiManager)getApplication().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiManager wm = (WifiManager) getApplication().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         int wifiLockMode = WifiManager.WIFI_MODE_FULL;
         if (AndroidCompat.SDK >= 12) {
             wifiLockMode = WIFI_MODE_FULL_HIGH_PERF;
@@ -351,7 +346,7 @@ public class Term extends Activity implements UpdateCallback {
             mActionBar = actionBar;
             actionBar.setNavigationMode(ActionBarCompat.NAVIGATION_MODE_LIST);
             actionBar.setDisplayOptions(0, ActionBarCompat.DISPLAY_SHOW_TITLE);
-            
+
             if (mActionBarMode == TermSettings.ACTION_BAR_MODE_HIDES) {
                 actionBar.hide();
             }
@@ -361,9 +356,9 @@ public class Term extends Activity implements UpdateCallback {
 
         updatePrefs();
         mAlreadyStarted = true;
-        
+
         //
-		//this.bindService(new Intent(Term.this, PyScriptService2.class), connection, BIND_AUTO_CREATE);
+        //this.bindService(new Intent(Term.this, PyScriptService2.class), connection, BIND_AUTO_CREATE);
     }
     
   
@@ -405,7 +400,7 @@ public class Term extends Activity implements UpdateCallback {
             }
         }
 
-        return path.substring(0, path.length()-1);
+        return path.substring(0, path.length() - 1);
     }
 
     private void populateViewFlipper() {
@@ -415,26 +410,26 @@ public class Term extends Activity implements UpdateCallback {
 
             String[] mArgs = this.getIntent().getStringArrayExtra("PYTHONARGS");
 
-            if (mArgs!=null) {
+            if (mArgs != null) {
                 mTermSessions.add(createPyTermSession(mArgs));
 
             } else {
-            	mArgs = this.getIntent().getStringArrayExtra("ARGS");
-            	if (mArgs!=null) {
-	                mTermSessions.add(createPyTermSession(mArgs));
+                mArgs = this.getIntent().getStringArrayExtra("ARGS");
+                if (mArgs != null) {
+                    mTermSessions.add(createPyTermSession(mArgs));
 
-            	} else {
-            	
-		            if (mTermSessions.size() == 0) {
-		                mTermSessions.add(createPyTermSession(mArgs));
-		            }
-            	}
+                } else {
+
+                    if (mTermSessions.size() == 0) {
+                        mTermSessions.add(createPyTermSession(mArgs));
+                    }
+                }
             }
 
             for (TermSession session : mTermSessions) {
                 EmulatorView view = createEmulatorView(session);
                 mViewFlipper.addView(view);
-                
+
             }
 
 
@@ -446,7 +441,7 @@ public class Term extends Activity implements UpdateCallback {
             if ((flags & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0 &&
                     action != null) {
                 if (action.equals(RemoteInterface.PRIVACT_OPEN_NEW_WINDOW)) {
-                    mViewFlipper.setDisplayedChild(mTermSessions.size()-1);
+                    mViewFlipper.setDisplayedChild(mTermSessions.size() - 1);
                 } else if (action.equals(RemoteInterface.PRIVACT_SWITCH_WINDOW)) {
                     int target = intent.getIntExtra(RemoteInterface.PRIVEXTRA_TARGET_WINDOW, -1);
                     if (target >= 0) {
@@ -454,10 +449,10 @@ public class Term extends Activity implements UpdateCallback {
                     }
                 }
             } else {
-            	if (mArgs!=null) {
-                    mViewFlipper.setDisplayedChild(mTermSessions.size()-1);
+                if (mArgs != null) {
+                    mViewFlipper.setDisplayedChild(mTermSessions.size() - 1);
 
-            	}
+                }
             }
 
             mViewFlipper.resumeCurrentView();
@@ -492,7 +487,7 @@ public class Term extends Activity implements UpdateCallback {
     @Override
     public void onDestroy() {
         super.onDestroy();
-		//this.unbindService(connection);
+        //this.unbindService(connection);
 
         mViewFlipper.removeAllViews();
         unbindService(mTSConnection);
@@ -515,7 +510,7 @@ public class Term extends Activity implements UpdateCallback {
     }
 
     protected static TermSession createTermSession(Context context, TermSettings settings, String initialCommand, String path) {
-    	Log.d("Term", "createTermSession:"+initialCommand);
+        Log.d("Term", "createTermSession:" + initialCommand);
         ShellTermSession session = new ShellTermSession(context, settings, initialCommand, path);
         // XXX We should really be able to fetch this from within TermSession
         session.setProcessExitMessage(context.getString(R.string.process_exit_message));
@@ -524,10 +519,10 @@ public class Term extends Activity implements UpdateCallback {
     }
 
     @SuppressLint("NewApi")
-	private TermSession createTermSession(String[] mArgs) {
+    private TermSession createTermSession(String[] mArgs) {
         TermSettings settings = mSettings;
         TermSession session;
-        if (mArgs!=null &&mArgs.length>1 ) {
+        if (mArgs != null && mArgs.length > 1) {
             session = createTermSession(this, settings, mArgs[0], mArgs[1]);
         } else {
             session = createTermSession(this, settings, mArgs[0], "");
@@ -535,44 +530,44 @@ public class Term extends Activity implements UpdateCallback {
         session.setFinishCallback(mTermService);
         return session;
     }
-    
+
     @SuppressLint("NewApi")
-	private TermSession createPyTermSession(String[] mArgs) {
+    private TermSession createPyTermSession(String[] mArgs) {
         Log.d(TAG, "createPyTermSession");
         TermSettings settings = mSettings;
         TermSession session;
         String code = NAction.getCode(getApplicationContext());
         String scmd = "";
-        
+
         if (code.startsWith("qlua")) {
-	        scmd = getApplicationContext().getFilesDir()+"/bin/lua";
-	    	if (Build.VERSION.SDK_INT >= 20) { 
-	    		scmd = getApplicationContext().getFilesDir()+"/bin/lua-android5";
-	    	}
-	        if (mArgs==null) {
-	        	if (Build.VERSION.SDK_INT >= 20) { 
-	            	settings.mShell = getApplicationContext().getFilesDir()+"/bin/lua-android5";
-	        	} else {
-	            	settings.mShell = getApplicationContext().getFilesDir()+"/bin/lua";
-	        	}	
-	        	scmd = "";
-	            session = createTermSession(this, settings, scmd, "");
-	        } else {
-	        	//String content = FileHelper.getFileContents(mArgs[0]);
-	        	String cmd = scmd;
-	            session = createTermSession(this, settings, cmd+" "+mArgs[0]+"", mArgs[1]);
-	            mArgs = null;
-	        }
-	        
+            scmd = getApplicationContext().getFilesDir() + "/bin/lua";
+            if (Build.VERSION.SDK_INT >= 20) {
+                scmd = getApplicationContext().getFilesDir() + "/bin/lua-android5";
+            }
+            if (mArgs == null) {
+                if (Build.VERSION.SDK_INT >= 20) {
+                    settings.mShell = getApplicationContext().getFilesDir() + "/bin/lua-android5";
+                } else {
+                    settings.mShell = getApplicationContext().getFilesDir() + "/bin/lua";
+                }
+                scmd = "";
+                session = createTermSession(this, settings, scmd, "");
+            } else {
+                //String content = FileHelper.getFileContents(mArgs[0]);
+                String cmd = scmd;
+                session = createTermSession(this, settings, cmd + " " + mArgs[0] + "", mArgs[1]);
+                mArgs = null;
+            }
+
         } else {
-	        boolean isRootEnable = NAction.isRootEnable(this);
-	    	if (Build.VERSION.SDK_INT >= 20) {
+            boolean isRootEnable = NAction.isRootEnable(this);
+            if (Build.VERSION.SDK_INT >= 20) {
                 if (isRootEnable) {
                     scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-android5-root.sh";
                 } else {
                     scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-android5.sh";
                 }
-	    	}  else {
+            } else {
                 if (isRootEnable) {
                     scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-root.sh";
                 } else {
@@ -580,49 +575,42 @@ public class Term extends Activity implements UpdateCallback {
 
                 }
 
-	    	}
-	    	
-	        if (mArgs==null) {
+            }
+
+            if (mArgs == null) {
 
                 if (Build.VERSION.SDK_INT >= 20) {
 
                     if (isRootEnable) {
-                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython3-android5-root.sh && exit";
+                        scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-android5-root.sh && exit";
 
                     } else {
-                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython3-android5.sh && exit";
+                        scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-android5.sh && exit";
 
                     }
 
 
-	        	} else {
+                } else {
                     if (isRootEnable) {
-                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython3-root.sh && exit";
+                        scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-root.sh && exit";
 
                     } else {
-                        scmd = getApplicationContext().getFilesDir()+"/bin/qpython3.sh && exit";
+                        scmd = getApplicationContext().getFilesDir() + "/bin/qpython3.sh && exit";
 
                     }
-	
-	        	}
-	            session = createTermSession(this, settings, scmd, "");
-	
-	        } else {
-	        	
-	        	//String content = FileHelper.getFileContents(mArgs[0]);
-	        	//String cmd = settings.getInitialCommand().equals("")?scmd:settings.getInitialCommand();
-//	        	if (mArgs.length<3) {
-//	        		session = createTermSession(this, settings, scmd+" \""+StringUtils.addSlashes(mArgs[0])+"\" && exit", mArgs[1]);
-//	        		mArgs = null;
-//	        	} else {
-	        		String cm = "";
-	        		for (int i=0;i<mArgs.length-1;i++) {
-	        			cm += " "+StringUtils.addSlashes(mArgs[i])+" ";
-	        		}
-	        		session = createTermSession(this, settings, scmd+" "+cm+" && exit", mArgs[1]);
-	        		mArgs = null;
-	        	//}
-	        }
+
+                }
+                session = createTermSession(this, settings, scmd, "");
+
+            } else {
+
+                String cm = "";
+                for (int i = 0; i < mArgs.length - 1; i++) {
+                    cm += " " + StringUtils.addSlashes(mArgs[i]) + " ";
+                }
+                session = createTermSession(this, settings, scmd + " " + cm + " && exit", mArgs[1]);
+
+            }
         }
         session.setFinishCallback(mTermService);
         return session;
@@ -768,7 +756,7 @@ public class Term extends Activity implements UpdateCallback {
 
     private boolean checkHaveFullHwKeyboard(Configuration c) {
         return (c.keyboard == Configuration.KEYBOARD_QWERTY) &&
-            (c.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO);
+                (c.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO);
     }
 
     @Override
@@ -791,6 +779,14 @@ public class Term extends Activity implements UpdateCallback {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
+//         MenuItem back_btn = menu.findItem(R.id.);
+//        back_btn.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+//            @Override
+//            public boolean onMenuItemClick(MenuItem item) {
+//                Toast.makeText(getApplicationContext(),"HERE", Toast.LENGTH_LONG).show();
+//                return true;
+//            }
+//        });
         //MenuItemCompat.setShowAsAction(menu.findItem(R.id.menu_special_keys), MenuItemCompat.SHOW_AS_ACTION_ALWAYS);
         MenuItemCompat.setShowAsAction(menu.findItem(R.id.menu_new_window), MenuItemCompat.SHOW_AS_ACTION_IF_ROOM);
         //MenuItemCompat.setShowAsAction(menu.findItem(R.id.menu_close_window), MenuItemCompat.SHOW_AS_ACTION_IF_ROOM);
@@ -803,7 +799,9 @@ public class Term extends Activity implements UpdateCallback {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.menu_preferences) {
+        if (id == android.R.id.home) {
+            Log.d(TAG, "onOptionsItemSelected");
+        } else if (id == R.id.menu_preferences) {
             doPreferences();
         } else if (id == R.id.menu_new_window) {
             doCreateNewWindow();
@@ -835,10 +833,10 @@ public class Term extends Activity implements UpdateCallback {
           case SEND_FN_KEY_ID:
             doSendFnKey();
          */
-        //} else if (id == R.id.menu_special_keys) {
-          //  doDocumentKeys();
-        //} else if (id == R.id.menu_toggle_soft_keyboard) {
-          //  doToggleSoftKeyboard();
+            //} else if (id == R.id.menu_special_keys) {
+            //  doDocumentKeys();
+            //} else if (id == R.id.menu_toggle_soft_keyboard) {
+            //  doToggleSoftKeyboard();
         } else if (id == R.id.menu_toggle_wakelock) {
             doToggleWakeLock();
         } else if (id == R.id.menu_toggle_wifilock) {
@@ -857,12 +855,12 @@ public class Term extends Activity implements UpdateCallback {
         } else if (id == R.id.menu_send_control_key) {
             doSendControlKey();
 
-        //} else if (id == R.id.menu_send_fn_key) {
-          //  doSendFnKey();
+            //} else if (id == R.id.menu_send_fn_key) {
+            //  doSendFnKey();
 
 
         } else {
-        	//Log.d(TAG, "onOptionsItemSelected:");
+            //Log.d(TAG, "onOptionsItemSelected:");
         }
         // Hide the action bar if appropriate
         if (mActionBarMode == TermSettings.ACTION_BAR_MODE_HIDES) {
@@ -884,7 +882,7 @@ public class Term extends Activity implements UpdateCallback {
         view.updatePrefs(mSettings);
 
         mViewFlipper.addView(view);
-        mViewFlipper.setDisplayedChild(mViewFlipper.getChildCount()-1);
+        mViewFlipper.setDisplayedChild(mViewFlipper.getChildCount() - 1);
     }
 
     private void confirmCloseWindow() {
@@ -951,24 +949,24 @@ public class Term extends Activity implements UpdateCallback {
     @Override
     protected void onActivityResult(int request, int result, Intent data) {
         switch (request) {
-        case REQUEST_CHOOSE_WINDOW:
-            if (result == RESULT_OK && data != null) {
-                int position = data.getIntExtra(EXTRA_WINDOW_ID, -2);
-                if (position >= 0) {
-                    // Switch windows after session list is in sync, not here
-                    onResumeSelectWindow = position;
-                } else if (position == -1) {
-                    doCreateNewWindow();
-                    onResumeSelectWindow = mTermSessions.size() - 1;
+            case REQUEST_CHOOSE_WINDOW:
+                if (result == RESULT_OK && data != null) {
+                    int position = data.getIntExtra(EXTRA_WINDOW_ID, -2);
+                    if (position >= 0) {
+                        // Switch windows after session list is in sync, not here
+                        onResumeSelectWindow = position;
+                    } else if (position == -1) {
+                        doCreateNewWindow();
+                        onResumeSelectWindow = mTermSessions.size() - 1;
+                    }
+                } else {
+                    // Close the activity if user closed all sessions
+                    if (mTermSessions == null || mTermSessions.size() == 0) {
+                        mStopServiceOnFinish = true;
+                        finish();
+                    }
                 }
-            } else {
-                // Close the activity if user closed all sessions
-                if (mTermSessions == null || mTermSessions.size() == 0) {
-                    mStopServiceOnFinish = true;
-                    finish();
-                }
-            }
-            break;
+                break;
         }
     }
 
@@ -1023,44 +1021,28 @@ public class Term extends Activity implements UpdateCallback {
         return super.onPrepareOptionsMenu(menu);
     }
 
-    /*
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v,
-            ContextMenuInfo menuInfo) {
-      super.onCreateContextMenu(menu, v, menuInfo);
-      menu.setHeaderTitle(R.string.edit_text);
-      menu.add(0, SELECT_TEXT_ID, 0, R.string.select_text);
-      menu.add(0, COPY_ALL_ID, 0, R.string.copy_all);
-      menu.add(0, PASTE_ID, 0,  R.string.paste);
-      menu.add(0, SEND_CONTROL_KEY_ID, 0, R.string.send_control_key);
-      menu.add(0, SEND_FN_KEY_ID, 0, R.string.send_fn_key);
-      if (!canPaste()) {
-          menu.getItem(PASTE_ID).setEnabled(false);
-      }
-    }*/
-
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-          switch (item.getItemId()) {
-          case SELECT_TEXT_ID:
-            getCurrentEmulatorView().toggleSelectingText();
-            return true;
-          case COPY_ALL_ID:
-            doCopyAll();
-            return true;
-          case PASTE_ID:
-            doPaste();
-            return true;
-          case SEND_CONTROL_KEY_ID:
-            doSendControlKey();
-            return true;
-          case SEND_FN_KEY_ID:
-            doSendFnKey();
-            return true;
-          default:
-            return super.onContextItemSelected(item);
-          }
+        switch (item.getItemId()) {
+            case SELECT_TEXT_ID:
+                getCurrentEmulatorView().toggleSelectingText();
+                return true;
+            case COPY_ALL_ID:
+                doCopyAll();
+                return true;
+            case PASTE_ID:
+                doPaste();
+                return true;
+            case SEND_CONTROL_KEY_ID:
+                doSendControlKey();
+                return true;
+            case SEND_FN_KEY_ID:
+                doSendFnKey();
+                return true;
+            default:
+                return super.onContextItemSelected(item);
         }
+    }
 
     public void closeWindow() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
@@ -1115,6 +1097,7 @@ public class Term extends Activity implements UpdateCallback {
         }
 
     }
+
     @Override
     public boolean onKeyDown(final int keyCode, KeyEvent event) {
         /* The pre-Eclair default implementation of onKeyDown() would prevent
@@ -1193,7 +1176,7 @@ public class Term extends Activity implements UpdateCallback {
             return super.onKeyDown(keyCode, event);
         }
 
-    	//}
+        //}
     }
 
     @Override
@@ -1222,15 +1205,15 @@ public class Term extends Activity implements UpdateCallback {
             default:
                 return false;
             }*/
-        case KeyEvent.KEYCODE_MENU:
-            if (mActionBar != null && !mActionBar.isShowing()) {
-                mActionBar.show();
-                return true;
-            } else {
+            case KeyEvent.KEYCODE_MENU:
+                if (mActionBar != null && !mActionBar.isShowing()) {
+                    mActionBar.show();
+                    return true;
+                } else {
+                    return super.onKeyUp(keyCode, event);
+                }
+            default:
                 return super.onKeyUp(keyCode, event);
-            }
-        default:
-            return super.onKeyUp(keyCode, event);
         }
     }
 
@@ -1307,16 +1290,16 @@ public class Term extends Activity implements UpdateCallback {
 
     private void doCopyAll() {
         ClipboardManager clip = (ClipboardManager)
-             getSystemService(Context.CLIPBOARD_SERVICE);
+                getSystemService(Context.CLIPBOARD_SERVICE);
         clip.setText(getCurrentTermSession().getTranscriptText().trim());
     }
 
     private void doPaste() {
         ClipboardManager clip = (ClipboardManager)
-         getSystemService(Context.CLIPBOARD_SERVICE);
+                getSystemService(Context.CLIPBOARD_SERVICE);
         CharSequence paste = clip.getText();
         byte[] utf8;
-        if (paste!=null) {
+        if (paste != null) {
             try {
                 utf8 = paste.toString().getBytes("UTF-8");
             } catch (UnsupportedEncodingException e) {
@@ -1369,26 +1352,26 @@ public class Term extends Activity implements UpdateCallback {
                                     R.string.control_key_dialog_fn_disabled_text, "FNKEY"));
             dialog.show();
         }
-     }
+    }
 
-     private String formatMessage(int keyId, int disabledKeyId,
-         Resources r, int arrayId,
-         int enabledId,
-         int disabledId, String regex) {
-         if (keyId == disabledKeyId) {
-             return r.getString(disabledId);
-         }
-         String[] keyNames = r.getStringArray(arrayId);
-         String keyName = keyNames[keyId];
-         String template = r.getString(enabledId);
-         String result = template.replaceAll(regex, keyName);
-         return result;
+    private String formatMessage(int keyId, int disabledKeyId,
+                                 Resources r, int arrayId,
+                                 int enabledId,
+                                 int disabledId, String regex) {
+        if (keyId == disabledKeyId) {
+            return r.getString(disabledId);
+        }
+        String[] keyNames = r.getStringArray(arrayId);
+        String keyName = keyNames[keyId];
+        String template = r.getString(enabledId);
+        String result = template.replaceAll(regex, keyName);
+        return result;
     }
 
     private void doToggleSoftKeyboard() {
         InputMethodManager imm = (InputMethodManager)
-            getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
+                getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 
     }
 
@@ -1424,114 +1407,104 @@ public class Term extends Activity implements UpdateCallback {
 
     private void doUIToggle(int x, int y, int width, int height) {
         switch (mActionBarMode) {
-        case TermSettings.ACTION_BAR_MODE_NONE:
-            if (AndroidCompat.SDK >= 11 && (mHaveFullHwKeyboard || y < height / 2)) {
-                openOptionsMenu();
-                return;
-            } else {
-                doToggleSoftKeyboard();
-            }
-            break;
-        case TermSettings.ACTION_BAR_MODE_ALWAYS_VISIBLE:
-            if (!mHaveFullHwKeyboard) {
-                doToggleSoftKeyboard();
-            }
-            break;
-        case TermSettings.ACTION_BAR_MODE_HIDES:
-            if (mHaveFullHwKeyboard || y < height / 2) {
-                doToggleActionBar();
-                return;
-            } else {
-                doToggleSoftKeyboard();
-            }
-            break;
+            case TermSettings.ACTION_BAR_MODE_NONE:
+                if (AndroidCompat.SDK >= 11 && (mHaveFullHwKeyboard || y < height / 2)) {
+                    openOptionsMenu();
+                    return;
+                } else {
+                    doToggleSoftKeyboard();
+                }
+                break;
+            case TermSettings.ACTION_BAR_MODE_ALWAYS_VISIBLE:
+                if (!mHaveFullHwKeyboard) {
+                    doToggleSoftKeyboard();
+                }
+                break;
+            case TermSettings.ACTION_BAR_MODE_HIDES:
+                if (mHaveFullHwKeyboard || y < height / 2) {
+                    doToggleActionBar();
+                    return;
+                } else {
+                    doToggleSoftKeyboard();
+                }
+                break;
         }
         getCurrentEmulatorView().requestFocus();
     }
-    
-    public void unpackDataInPyAct(final String resource, File target) {
-        // The version of data in memory and on disk.
-        String data_version = resourceManager.getString(resource + "_version");
-        String disk_version = "0";
 
-        //Log.d(TAG, "data_version:"+data_version+"-"+resource + "_version"+"-"+resourceManager);
-        // If no version, no unpacking is necessary.
-        if (data_version == null) {
-            return;
-        }
-
-        // Check the current disk version, if any.
-        String filesDir = target.getAbsolutePath();
-        String disk_version_fn = filesDir + "/" + resource + ".version";
-
-        try {
-            byte buf[] = new byte[64];
-            InputStream is = new FileInputStream(disk_version_fn);
-            int len = is.read(buf);
-            disk_version = new String(buf, 0, len);
-            is.close();
-        } catch (Exception e) {
-            disk_version = "0";
-        }
-
-        
-        //Log.d(TAG, "data_version:"+Math.round(Double.parseDouble(data_version))+"-disk_version:"+Math.round(Double.parseDouble(disk_version))+"-RET:"+(int)(Double.parseDouble(data_version)-Double.parseDouble(disk_version)));
-        if ((int)(Double.parseDouble(data_version)-Double.parseDouble(disk_version))>0 || disk_version.equals("0")) {
-            Log.v(TAG, "Extracting " + resource + " assets.");
-
-            //recursiveDelete(target);
-            target.mkdirs();
-
-            AssetExtract ae = new AssetExtract(this);
-            if (!ae.extractTar(resource + ".mp3", target.getAbsolutePath())) {
-                Toast.makeText(this,"Could not extract " + resource + " data.", Toast.LENGTH_SHORT).show();
-            }
-
-            try {
-            	/*if (resource.equals("private")) {
-            		Toast.makeText(getApplicationContext(), R.string.first_load, Toast.LENGTH_SHORT).show();
-            	}*/
-                // Write .nomedia.
-                new File(target, ".nomedia").createNewFile();
-
-                // Write version file.
-                FileOutputStream os = new FileOutputStream(disk_version_fn);
-                os.write(data_version.getBytes());
-                os.close();
-            } catch (Exception e) {
-                Log.w("python", e);
-                Toast.makeText(this, "Could not extract " + resource + " data, make sure your device have enough space.", Toast.LENGTH_LONG);
-            }
-        } else {
-        	Log.d(TAG, "NO EXTRACT");
-
-        }
-        if (resource.startsWith("private")) {
-//            File mf = new File(getFilesDir()+"/lib/python2.7/config/Makefile");
-//            if (!mf.exists()) {
+//    public void unpackDataInPyAct(final String resource, File target) {
+//        // The version of data in memory and on disk.
+//        String data_version = resourceManager.getString(resource + "_version");
+//        String disk_version = "0";
 //
-//                try {
-//                    mf.createNewFile();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
+//        //Log.d(TAG, "data_version:"+data_version+"-"+resource + "_version"+"-"+resourceManager);
+//        // If no version, no unpacking is necessary.
+//        if (data_version == null) {
+//            return;
+//        }
+//
+//        // Check the current disk version, if any.
+//        String filesDir = target.getAbsolutePath();
+//        String disk_version_fn = filesDir + "/" + resource + ".version";
+//
+//        try {
+//            byte buf[] = new byte[64];
+//            InputStream is = new FileInputStream(disk_version_fn);
+//            int len = is.read(buf);
+//            disk_version = new String(buf, 0, len);
+//            is.close();
+//        } catch (Exception e) {
+//            disk_version = "0";
+//        }
+//
+//
+//        //Log.d(TAG, "data_version:"+Math.round(Double.parseDouble(data_version))+"-disk_version:"+Math.round(Double.parseDouble(disk_version))+"-RET:"+(int)(Double.parseDouble(data_version)-Double.parseDouble(disk_version)));
+//        if ((int)(Double.parseDouble(data_version)-Double.parseDouble(disk_version))>0 || disk_version.equals("0")) {
+//            Log.v(TAG, "Extracting " + resource + " assets.");
+//
+//            //recursiveDelete(target);
+//            target.mkdirs();
+//
+//            AssetExtract ae = new AssetExtract(this);
+//            if (!ae.extractTar(resource + ".mp3", target.getAbsolutePath())) {
+//                Toast.makeText(this,"Could not extract " + resource + " data.", Toast.LENGTH_SHORT).show();
 //            }
-			File bind = new File(getFilesDir()+"/bin");
-			if (bind.listFiles()!=null) {
-				for (File bin : bind.listFiles()) {
-					try {
-			  			//Log.d(TAG, "chmod:"+bin.getAbsolutePath());
-			          
-						FileUtils.chmod(bin, 0755);
-					} catch (Exception e1) {
-						e1.printStackTrace();
-					}
-				}
-			}
-        }
-
-    }
-    
-    
-
+//
+//            try {
+//            	/*if (resource.equals("private")) {
+//            		Toast.makeText(getApplicationContext(), R.string.first_load, Toast.LENGTH_SHORT).show();
+//            	}*/
+//                // Write .nomedia.
+//                new File(target, ".nomedia").createNewFile();
+//
+//                // Write version file.
+//                FileOutputStream os = new FileOutputStream(disk_version_fn);
+//                os.write(data_version.getBytes());
+//                os.close();
+//            } catch (Exception e) {
+//                Log.w("python", e);
+//                Toast.makeText(this, "Could not extract " + resource + " data, make sure your device have enough space.", Toast.LENGTH_LONG);
+//            }
+//        } else {
+//        	Log.d(TAG, "NO EXTRACT");
+//
+//        }
+//        if (resource.startsWith("private")) {
+//
+//			File bind = new File(getFilesDir()+"/bin");
+//			if (bind.listFiles()!=null) {
+//				for (File bin : bind.listFiles()) {
+//					try {
+//			  			//Log.d(TAG, "chmod:"+bin.getAbsolutePath());
+//
+//						FileUtils.chmod(bin, 0755);
+//					} catch (Exception e1) {
+//						e1.printStackTrace();
+//					}
+//				}
+//			}
+//        }
+//
+//    }
+//}
 }

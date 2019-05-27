@@ -16,6 +16,7 @@
 
 package jackpal.androidterm;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.view.MenuItem;
@@ -44,9 +45,13 @@ public class TermPreferences extends PreferenceActivity {
         }
 
         // Display up indicator on action bar home button
-        if (AndroidCompat.SDK >= 11) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             ActionBarCompat bar = ActivityCompat.getActionBar(this);
+            //setTheme(R.style.Theme_Holo);
+
             if (bar != null) {
+                getActionBar().setBackgroundDrawable(this.getBaseContext().getResources().getDrawable(R.drawable.action_bar_background));
+
                 bar.setDisplayOptions(ActionBarCompat.DISPLAY_HOME_AS_UP, ActionBarCompat.DISPLAY_HOME_AS_UP);
             }
         }
