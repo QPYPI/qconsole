@@ -31,6 +31,7 @@
  */
 
 #include "common.h"
+#include <string.h>
 
 #define LOG_TAG "Exec"
 
@@ -103,20 +104,20 @@ static int create_subprocess(const char *cmd,
 
     ptm = open("/dev/ptmx", O_RDWR); // | O_NOCTTY);
     if(ptm < 0){
-        LOGE("[ cannot open /dev/ptmx - %s ]\n",strerror(errno));
+        //LOGE("[ cannot open /dev/ptmx - %s ]\n",strerror(errno));
         return -1;
     }
     fcntl(ptm, F_SETFD, FD_CLOEXEC);
 
     if(grantpt(ptm) || unlockpt(ptm) ||
        ((devname = (char*) ptsname(ptm)) == 0)){
-        LOGE("[ trouble with /dev/ptmx - %s ]\n", strerror(errno));
+        //LOGE("[ trouble with /dev/ptmx - %s ]\n", strerror(errno));
         return -1;
     }
 
     pid = fork();
     if(pid < 0) {
-        LOGE("- fork failed: %s -\n", strerror(errno));
+        //LOGE("- fork failed: %s -\n", strerror(errno));
         return -1;
     }
 
