@@ -11,7 +11,9 @@ android {
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a"
         }
+
     }
+
 
     buildTypes {
         release {
@@ -25,6 +27,32 @@ android {
         }
 
     }
+    /*
+    productFlavors {
+
+        qlua {
+            dimension "qlua"
+
+//            resValue "string", "app_name", "Qpython"
+        }
+
+        qpy {
+            dimension "qpy"
+
+//            resValue "string", "app_name", "Qpython"
+        }
+
+        google {
+            dimension "default"
+
+
+        }
+        cn {
+            dimension "cn"
+
+
+        }
+    }*/
 }
 
 dependencies {

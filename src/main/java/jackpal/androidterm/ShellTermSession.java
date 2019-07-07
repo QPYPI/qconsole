@@ -2,12 +2,15 @@ package jackpal.androidterm;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.quseit.config.CONF;
 import com.quseit.util.FileHelper;
 import com.quseit.util.FileUtils;
 import com.quseit.util.NAction;
@@ -37,6 +40,7 @@ public class ShellTermSession extends TermSession {
     private static final boolean VTTEST_MODE = false;
     private TermSettings mSettings;
     private Context context;
+    private static final String TAG = "ShellTermSession";
     
     private int mProcId;
     private FileDescriptor mTermFd;
@@ -86,6 +90,7 @@ public class ShellTermSession extends TermSession {
     
     public ShellTermSession(Context context, TermSettings settings, String cmd, String pyPath) {
         super();
+        Log.d(TAG, "ShellTermSession(cmd):"+cmd);
         this.context = context;
         this.pyPath = pyPath;
         this.isEnd = false;
@@ -130,6 +135,7 @@ public class ShellTermSession extends TermSession {
     }
     
     private void initializeSession(String cmd) {
+        Log.d(TAG, "initializeSession:"+cmd);
         TermSettings settings = mSettings;
 
         int[] processId = new int[1];
@@ -151,26 +157,28 @@ public class ShellTermSession extends TermSession {
         if (settings.verifyPath()) {
             path = checkPath(path);
         }
-        String[] env = new String[21];
+        String[] env = new String[20];
         File filesDir = this.context.getFilesDir();
 
-        env[0] = "TERM=" + settings.getTermType();
-        env[1] = "PATH=" + this.context.getFilesDir()+"/bin"+":"+path;
-        env[2] = "LD_LIBRARY_PATH=.:"+filesDir+"/lib/"+":"+filesDir+"/:"+filesDir.getParentFile()+"/lib/";
-        env[3] = "PYTHONHOME="+filesDir;
-        env[4] = "ANDROID_PRIVATE="+filesDir;
-        
-
         // HACKED FOR QPython
-        File externalStorage = new File(Environment.getExternalStorageDirectory(), "qpython");
+        File externalStorage = new File(Environment.getExternalStorageDirectory(), CONF.BASE_PATH);
 
         if (!externalStorage.exists()) {
-        	externalStorage.mkdir();
+            externalStorage.mkdir();
+        }
+        File td = new File(externalStorage+"/cache");
+        if (!td.exists()) {
+            td.mkdir();
         }
 
         String py3 = NAction.getQPyInterpreter(this.context);
 
-        Log.d("HERE", py3);
+        env[0] = "TERM=" + settings.getTermType();
+        env[1] = "PATH=" + this.context.getFilesDir()+"/bin"+":"+path;
+        env[2] = "LD_LIBRARY_PATH=/system/lib/:.:"+filesDir+"/lib/"+":"+filesDir+"/:"+filesDir.getParentFile()+"/lib/";
+        env[3] = "PYTHONHOME="+filesDir;
+        env[4] = "ANDROID_PRIVATE="+filesDir;
+
         env[5] = "PYTHONPATH="
                 +filesDir+"/lib/"+py3+"/site-packages/:"
                 +filesDir+"/lib/"+py3+"/:"
@@ -180,30 +188,23 @@ public class ShellTermSession extends TermSession {
                 +externalStorage+"/lib/"+py3+"/site-packages/:"
                 +pyPath;
 
-        env[14] = "IS_QPY3=1";
-
-        
         env[6] = "PYTHONOPTIMIZE=2";
         env[7] = "TMPDIR="+externalStorage+"/cache";
-        File td = new File(externalStorage+"/cache");
-        if (!td.exists()) {
-        	td.mkdir();
-        }
-        
+
         env[8] = "AP_HOST="+NStorage.getSP(this.context, "sl4a.hostname");
         env[9] = "AP_PORT="+NStorage.getSP(this.context, "sl4a.port");
         env[10] = "AP_HANDSHAKE="+NStorage.getSP(this.context, "sl4a.secue");
 
         env[11] = "ANDROID_PUBLIC="+externalStorage;
-        env[12] = "ANDROID_PRIVATE="+this.context.getFilesDir().getAbsolutePath();
-        env[13] = "ANDROID_ARGUMENT="+pyPath;
+        env[12] = "ANDROID_ARGUMENT="+pyPath;
+        env[13] = "IS_QPY3=1";
 
-        env[15] = "QPY_USERNO="+NAction.getUserNoId(context);
-        env[16] = "QPY_ARGUMENT="+NAction.getExtConf(context);
-        env[17] = "PYTHONDONTWRITEBYTECODE=1";
-        env[18] = "TMP="+externalStorage+"/cache";
-        env[19] = "ANDROID_APP_PATH="+externalStorage+"";
-        env[20] = "LANG=en_US.UTF-8";
+        env[14] = "QPY_USERNO="+NAction.getUserNoId(context);
+        env[15] = "QPY_ARGUMENT="+NAction.getExtConf(context);
+        env[16] = "PYTHONDONTWRITEBYTECODE=1";
+        env[17] = "TMP="+externalStorage+"/cache";
+        env[18] = "ANDROID_APP_PATH="+externalStorage+"";
+        env[19] = "LANG=en_US.UTF-8";
 
         File enf = new File(context.getFilesDir()+"/bin/init.sh");
         //if (! enf.exists()) {
@@ -266,6 +267,7 @@ public class ShellTermSession extends TermSession {
         }
     }
 
+     @RequiresApi(api = Build.VERSION_CODES.O)
      private void createSubprocess(int[] processId, String shell, String[] env) {
         ArrayList<String> argList = parse(shell);
         String arg0;
@@ -282,6 +284,7 @@ public class ShellTermSession extends TermSession {
                 throw new FileNotFoundException(arg0);
             }
             args = argList.toArray(new String[1]);
+
         } catch (Exception e) {
             argList = parse(mSettings.getFailsafeShell());
             arg0 = argList.get(0);

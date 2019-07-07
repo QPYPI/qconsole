@@ -39,7 +39,7 @@ public class TermSettings {
     private int mControlKeyId;
     private int mFnKeyId;
     private int mUseCookedIME;
-    public String mShell;
+    private String mShell;
     private String mFailsafeShell;
     private String mInitialCommand;
     private String mTermType;
@@ -281,7 +281,13 @@ public class TermSettings {
         return (mUseCookedIME != 0);
     }
 
+    public void setShell(String shell) {
+        Log.d("TermSetting", "setShell:"+shell);
+        this.mShell = shell;
+
+    }
     public String getShell() {
+        Log.d("TermSetting", "getShell:"+mShell);
         return mShell;
     }
 

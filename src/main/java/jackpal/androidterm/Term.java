@@ -510,7 +510,7 @@ public class Term extends Activity implements UpdateCallback {
     }
 
     protected static TermSession createTermSession(Context context, TermSettings settings, String initialCommand, String path) {
-        Log.d("Term", "createTermSession:" + initialCommand);
+        Log.d("Term", "createTermSession:("+initialCommand+")(path):"+path);
         ShellTermSession session = new ShellTermSession(context, settings, initialCommand, path);
         // XXX We should really be able to fetch this from within TermSession
         session.setProcessExitMessage(context.getString(R.string.process_exit_message));
@@ -533,71 +533,47 @@ public class Term extends Activity implements UpdateCallback {
 
     @SuppressLint("NewApi")
     private TermSession createPyTermSession(String[] mArgs) {
-        Log.d(TAG, "createPyTermSession");
         TermSettings settings = mSettings;
         TermSession session;
         String code = NAction.getCode(getApplicationContext());
         String scmd = "";
 
+        Log.d(TAG, "createPyTermSession:(code)"+code);
+
         if (code.startsWith("qlua")) {
-            scmd = getApplicationContext().getFilesDir() + "/bin/lua";
-            if (Build.VERSION.SDK_INT >= 20) {
-                scmd = getApplicationContext().getFilesDir() + "/bin/lua-android5";
-            }
+            scmd = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.SUPPORTED_64_BIT_ABIS.length > 0) ? getApplicationContext().getFilesDir() + "/bin/lua5-64" : getApplicationContext().getFilesDir() + "/bin/lua5";
+
             if (mArgs == null) {
-                if (Build.VERSION.SDK_INT >= 20) {
-                    settings.mShell = getApplicationContext().getFilesDir() + "/bin/lua-android5";
-                } else {
-                    settings.mShell = getApplicationContext().getFilesDir() + "/bin/lua";
-                }
-                scmd = "";
+                //settings.setShell(scmd);
+                //scmd = "";
                 session = createTermSession(this, settings, scmd, "");
             } else {
+                Log.d(TAG, "createPyTermSession（scmd）:"+scmd+":margs0:"+mArgs[0]);
                 //String content = FileHelper.getFileContents(mArgs[0]);
-                String cmd = scmd;
-                session = createTermSession(this, settings, cmd + " " + mArgs[0] + "", mArgs[1]);
+                String cmd = scmd + " " + mArgs[0] + "";
+                //settings.setShell(cmd);
+
+                session = createTermSession(this, settings, cmd, mArgs[1]);
                 mArgs = null;
             }
 
         } else {
             boolean isRootEnable = NAction.isRootEnable(this);
             if (Build.VERSION.SDK_INT >= 20) {
-                if (isRootEnable) {
-                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-android5-root.sh";
-                } else {
-                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-android5.sh";
-                }
-            } else {
-                if (isRootEnable) {
-                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-root.sh";
-                } else {
-                    scmd = getApplicationContext().getFilesDir() + "/bin/qpython3.sh";
+                scmd = isRootEnable ? getApplicationContext().getFilesDir() + "/bin/qpython3-android5-root.sh" : getApplicationContext().getFilesDir() + "/bin/qpython3-android5.sh" ;
 
-                }
+            } else {
+                scmd = isRootEnable ? getApplicationContext().getFilesDir() + "/bin/qpython3-root.sh" : getApplicationContext().getFilesDir() + "/bin/qpython3.sh";
 
             }
 
             if (mArgs == null) {
 
                 if (Build.VERSION.SDK_INT >= 20) {
-
-                    if (isRootEnable) {
-                        scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-android5-root.sh && exit";
-
-                    } else {
-                        scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-android5.sh && exit";
-
-                    }
-
+                    scmd = isRootEnable ? getApplicationContext().getFilesDir() + "/bin/qpython3-android5-root.sh && exit" : getApplicationContext().getFilesDir() + "/bin/qpython3-android5.sh && exit";
 
                 } else {
-                    if (isRootEnable) {
-                        scmd = getApplicationContext().getFilesDir() + "/bin/qpython3-root.sh && exit";
-
-                    } else {
-                        scmd = getApplicationContext().getFilesDir() + "/bin/qpython3.sh && exit";
-
-                    }
+                    scmd = isRootEnable ? getApplicationContext().getFilesDir() + "/bin/qpython3-root.sh && exit" : getApplicationContext().getFilesDir() + "/bin/qpython3.sh && exit";
 
                 }
                 session = createTermSession(this, settings, scmd, "");
