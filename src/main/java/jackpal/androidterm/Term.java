@@ -63,6 +63,7 @@ import com.quseit.common.ResourceManager;
 import com.quseit.util.FileUtils;
 import com.quseit.util.NAction;
 import com.quseit.util.NStorage;
+import com.quseit.util.NUtil;
 import com.quseit.util.StringUtils;
 
 import java.io.File;
@@ -541,7 +542,7 @@ public class Term extends Activity implements UpdateCallback {
         Log.d(TAG, "createPyTermSession:(code)"+code);
 
         if (code.startsWith("qlua")) {
-            scmd = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.SUPPORTED_64_BIT_ABIS.length > 0) ? getApplicationContext().getFilesDir() + "/bin/lua5-64" : getApplicationContext().getFilesDir() + "/bin/lua5";
+            scmd = NUtil.is64Bit() ? getApplicationContext().getFilesDir() + "/bin/lua5-64" : getApplicationContext().getFilesDir() + "/bin/lua5";
 
             if (mArgs == null) {
                 //settings.setShell(scmd);

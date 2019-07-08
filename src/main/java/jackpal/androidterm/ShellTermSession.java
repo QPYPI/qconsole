@@ -14,6 +14,7 @@ import com.quseit.config.CONF;
 import com.quseit.util.FileHelper;
 import com.quseit.util.FileUtils;
 import com.quseit.util.NAction;
+import com.quseit.util.NUtil;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -173,12 +174,13 @@ public class ShellTermSession extends TermSession {
 
         String py3 = NAction.getQPyInterpreter(this.context);
 
+        String abiLib = NUtil.is64Bit() ? filesDir+"/libs/arm64-v8a/" : filesDir+"/libs/armeabi-v7a/";
+
         env[0] = "TERM=" + settings.getTermType();
         env[1] = "PATH=" + this.context.getFilesDir()+"/bin"+":"+path;
-        env[2] = "LD_LIBRARY_PATH=/system/lib/:.:"+filesDir+"/lib/"+":"+filesDir+"/:"+filesDir.getParentFile()+"/lib/";
+        env[2] = "LD_LIBRARY_PATH=.:"+filesDir+"/lib/"+":"+filesDir+"/:"+filesDir.getParentFile()+"/lib/:"+abiLib;
         env[3] = "PYTHONHOME="+filesDir;
         env[4] = "ANDROID_PRIVATE="+filesDir;
-
         env[5] = "PYTHONPATH="
                 +filesDir+"/lib/"+py3+"/site-packages/:"
                 +filesDir+"/lib/"+py3+"/:"
@@ -187,18 +189,14 @@ public class ShellTermSession extends TermSession {
                 +filesDir+"/lib/"+py3+"/lib-dynload/:"
                 +externalStorage+"/lib/"+py3+"/site-packages/:"
                 +pyPath;
-
         env[6] = "PYTHONOPTIMIZE=2";
         env[7] = "TMPDIR="+externalStorage+"/cache";
-
         env[8] = "AP_HOST="+NStorage.getSP(this.context, "sl4a.hostname");
         env[9] = "AP_PORT="+NStorage.getSP(this.context, "sl4a.port");
         env[10] = "AP_HANDSHAKE="+NStorage.getSP(this.context, "sl4a.secue");
-
         env[11] = "ANDROID_PUBLIC="+externalStorage;
         env[12] = "ANDROID_ARGUMENT="+pyPath;
         env[13] = "IS_QPY3=1";
-
         env[14] = "QPY_USERNO="+NAction.getUserNoId(context);
         env[15] = "QPY_ARGUMENT="+NAction.getExtConf(context);
         env[16] = "PYTHONDONTWRITEBYTECODE=1";
@@ -267,7 +265,6 @@ public class ShellTermSession extends TermSession {
         }
     }
 
-     @RequiresApi(api = Build.VERSION_CODES.O)
      private void createSubprocess(int[] processId, String shell, String[] env) {
         ArrayList<String> argList = parse(shell);
         String arg0;
